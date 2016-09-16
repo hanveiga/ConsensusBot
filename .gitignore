@@ -166,4 +166,4 @@ docs/source/emql*
 cover/
 
 .pylintrc
-
+settigns.py
