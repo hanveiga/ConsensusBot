@@ -1,4 +1,5 @@
 settings.py
+settigns.py
 *.pydevproject
 .project
 .metadata
