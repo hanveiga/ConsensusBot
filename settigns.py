@@ -1,1 +1,1 @@
-TOKEN = 'trolololo'
+TOKEN = '254910430:AAFREtnLyfW0za3xDZiN9Wxm7XjiKXr1XvQ'
