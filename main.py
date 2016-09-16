@@ -30,7 +30,7 @@ def start_consensus(bot, update):
     """Cleans/initializes data structures (runs new reasoning)
 
     :param bot:
-    :param update:
+    :param update: telegranm.ext.Update
     :return:
     """
 
@@ -42,7 +42,7 @@ def end_consensus(bot, update):
     """Returns reasoning result (in future it will be running bot queries)
 
     :param bot:
-    :param update:
+    :param update: telegranm.ext.Update
     :return:
     """
     raise NotImplemented
@@ -53,7 +53,7 @@ def times(bot, update):
     """Adds data entities proposed by user
 
     :param bot:
-    :param update:
+    :param update: telegranm.ext.Update
     :return:
     """
     raise NotImplemented
