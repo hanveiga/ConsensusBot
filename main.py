@@ -33,6 +33,7 @@ def start_consensus(bot, update):
     :param update:
     :return:
     """
+
     raise NotImplemented
     #bot.sendMessage(update.message.chat_id, text='Hi!')
 
