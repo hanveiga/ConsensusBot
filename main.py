@@ -15,6 +15,7 @@ bot.
 """
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import logging
+import data
 
 from settigns import TOKEN
 # Enable logging
@@ -66,7 +67,11 @@ def times(bot, update):
     :param update: telegranm.ext.Update
     :return:
     """
-    raise NotImplemented
+    a = data.DataMessage(update.message.from_user,update.message)
+    # add datamessage to a global queue?
+
+    #print a.list_of_times
+    #raise NotImplemented
     #bot.sendMessage(update.message.chat_id, text=update.message.text)
 
 
