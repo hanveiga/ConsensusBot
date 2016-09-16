@@ -16,6 +16,7 @@ bot.
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import logging
 import data
+import bots.meetingsuggestor as ms
 
 from settigns import TOKEN
 # Enable logging
@@ -26,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 meeting_length = 2
 
+message_stack = []
 
 # Define a few command handlers. These usually take the two arguments bot and
 # update. Error handlers also receive the raised TelegramError object in error.
@@ -57,8 +59,15 @@ def end_consensus(bot, update):
     :param update: telegranm.ext.Update
     :return:
     """
-    raise NotImplemented
-    #bot.sendMessage(update.message.chat_id, text='Help!')
+    times_availability = []
+    for message in message_stack:
+        for interval in message.list_of_times:
+            times_availability.append(interval)
+
+    for meeting in ms.get_suggested_meetings(times_availability):
+         print 'A date could be %s'%str(meeting)
+         bot.sendMessage(update.message.chat_id, text= 'lol')
+    #raise NotImplemented
 
 
 def times(bot, update):
@@ -70,7 +79,7 @@ def times(bot, update):
     """
     a = data.DataMessage(update.message.from_user,update.message)
     # add datamessage to a global queue?
-
+    message_stack.append(a)
     #print a.list_of_times
     #raise NotImplemented
     #bot.sendMessage(update.message.chat_id, text=update.message.text)
