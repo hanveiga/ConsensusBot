@@ -26,20 +26,41 @@ logger = logging.getLogger(__name__)
 
 # Define a few command handlers. These usually take the two arguments bot and
 # update. Error handlers also receive the raised TelegramError object in error.
-def start(bot, update):
-    bot.sendMessage(update.message.chat_id, text='Hi!')
+def start_consensus(bot, update):
+    """Cleans/initializes data structures (runs new reasoning)
+
+    :param bot:
+    :param update:
+    :return:
+    """
+    raise NotImplemented
+    #bot.sendMessage(update.message.chat_id, text='Hi!')
 
 
-def help(bot, update):
-    bot.sendMessage(update.message.chat_id, text='Help!')
+def end_consensus(bot, update):
+    """Returns reasoning result (in future it will be running bot queries)
+
+    :param bot:
+    :param update:
+    :return:
+    """
+    raise NotImplemented
+    #bot.sendMessage(update.message.chat_id, text='Help!')
 
 
-def echo(bot, update):
-    bot.sendMessage(update.message.chat_id, text=update.message.text)
+def times(bot, update):
+    """Adds data entities proposed by user
+
+    :param bot:
+    :param update:
+    :return:
+    """
+    raise NotImplemented
+    #bot.sendMessage(update.message.chat_id, text=update.message.text)
 
 
 def error(bot, update, error):
-    logger.warn('Update "%s" caused error "%s"' % (update, error))
+    logger.warn('Update {} caused error {}'.format(update, error))
 
 
 def main():
@@ -50,11 +71,9 @@ def main():
     dp = updater.dispatcher
 
     # on different commands - answer in Telegram
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("help", help))
-
-    # on noncommand i.e message - echo the message on Telegram
-    dp.add_handler(MessageHandler([Filters.text], echo))
+    dp.add_handler(CommandHandler('start_consensus', start_consensus))
+    dp.add_handler(CommandHandler('end_consensus', end_consensus))
+    dp.add_handler(CommandHandler('times', times))
 
     # log all errors
     dp.add_error_handler(error)
