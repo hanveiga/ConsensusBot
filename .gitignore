@@ -166,3 +166,6 @@ cover/
 
 .pylintrc
 
+# Individual developer settings
+settigns.py
+
