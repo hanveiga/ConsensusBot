@@ -23,6 +23,8 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 logger = logging.getLogger(__name__)
 
+meeting_length = 2
+
 
 # Define a few command handlers. These usually take the two arguments bot and
 # update. Error handlers also receive the raised TelegramError object in error.
@@ -33,9 +35,18 @@ def start_consensus(bot, update):
     :param update: telegranm.ext.Update
     :return:
     """
+    # TODO(scezar): right now requested format is /start_consensus int h
+    # TODO(scezar): clean main data structure (dict)
+    operated_message = update.message.text
+    new_meeting_len = ''
+    for letter in operated_message:
+        if letter.isdigit():
+            new_meeting_len += letter
+        elif new_meeting_len:
+            global meeting_length
+            meeting_length = int(new_meeting_len)
+            return
 
-    raise NotImplemented
-    #bot.sendMessage(update.message.chat_id, text='Hi!')
 
 
 def end_consensus(bot, update):
