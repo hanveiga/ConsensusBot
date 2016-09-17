@@ -28,8 +28,20 @@ class MessageParser():
             if resp['grain'] == 'month':
                 dateto = datefrom +timedelta(days=30)
             return datefrom,dateto
+    def extract_intent(self,message):
+        resp = self.client.message(message)
+        resp = json.loads(str(resp).replace("u'","'").replace("'",'"'))
+        resp = resp['entities']
+        if "start" in resp:
+            return "start"
+        elif "end" in resp:
+            return "end"
+        elif "datetime" in resp:
+            return "times"
+        else:
+            return "None"
 
 #m = MessageParser()
-#print m.extract_datetime_range('Im free next hour')
+#print m.extract_intent('how about having a meeting')
 
 
