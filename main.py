@@ -46,6 +46,8 @@ def start_consensus(bot, update):
     """
     # TODO(scezar): right now requested format is /start_consensus int h
     global message_stack
+    global listening
+    listening = True
     message_stack = []
     operated_message = update.message.text
     new_meeting_len = ''
@@ -64,15 +66,15 @@ def end_consensus(bot, update):
     :param update: telegranm.ext.Update
     :return:
     """
-    times_availability = []
-    for message in message_stack:
-        for interval in message.list_of_times:
-            times_availability.append(interval)
-
-    if ms.get_suggested_meetings(times_availability) == []:
-        print "Can't give meeting output yet"
-        bot.sendMessage(update.message.chat_id, text="I can't schedule for you yet. Tell me when you are free")
-        return
+    # times_availability = []
+    # for message in message_stack:
+    #     for interval in message.list_of_times:
+    #         times_availability.append(interval)
+    #
+    # if ms.get_suggested_meetings(times_availability) == []:
+    #     print "Can't give meeting output yet"
+    #     bot.sendMessage(update.message.chat_id, text="I can't schedule for you yet. Tell me when you are free")
+    #     return
 
     # meeting = ms.get_suggested_meetings(times_availability)[0] # takes highest ranked option
     # a, b = meeting
@@ -100,9 +102,16 @@ def times(bot, update):
 
 
 def void(bot, update):
+    """
+
+    :param bot:
+    :param update:
+    :return: Nothing. This is to handle irrelevant conversations
+    """
     print "Nothing"
 
-process_callback =  {
+process_callback = {
+
     "start" : start_consensus,
     "end" :   end_consensus,
     "times" : times,
@@ -110,6 +119,12 @@ process_callback =  {
 }
 
 def intent_extractor(bot, update):
+    """
+
+    :param bot:
+    :param update:
+    :return: Parses the intent and calls the appropriate callback
+    """
     intent = intent_parser.extract_intent(update.message.text)
     global listening
     feedback, give_reply, listening = gf.give_feedback(intent,listening)
