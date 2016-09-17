@@ -17,6 +17,9 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import logging
 import data
 import bots.meetingsuggestor as ms
+from parsing.MessageParser import MessageParser as mp
+import parsing.IntentFeedback as gf
+
 
 from settigns import TOKEN
 # Enable logging
@@ -27,8 +30,8 @@ logger = logging.getLogger(__name__)
 
 meeting_length = 2
 message_stack = []
-
 listening = False
+intent_parser = mp()
 
 
 # Define a few command handlers. These usually take the two arguments bot and
@@ -41,8 +44,6 @@ def start_consensus(bot, update):
     :return:
     """
     # TODO(scezar): right now requested format is /start_consensus int h
-    if not listening:
-        listening = True
     global message_stack
     message_stack = []
     operated_message = update.message.text
@@ -69,6 +70,11 @@ def end_consensus(bot, update):
         for interval in message.list_of_times:
             times_availability.append(interval)
 
+    if ms.get_suggested_meetings(times_availability) == []:
+        print "Can't give meeting output yet"
+        bot.sendMessage(update.message.chat_id, text="I can't schedule for you yet. Tell me when you are free")
+        return
+
     meeting = ms.get_suggested_meetings(times_availability)[0] # takes highest ranked option
     a, b = meeting
     start, end = a
@@ -83,10 +89,31 @@ def times(bot, update):
     :param update: telegranm.ext.Update
     :return:
     """
+    if not listening:
+        return
     a = data.DataMessage(update.message.from_user,update.message)
     # add datamessage to a global queue?
     message_stack.append(a)
+    print "added time"
 
+def void(bot, update):
+    print "Nothing"
+
+process_callback =  {
+    "start" : start_consensus,
+    "end" :   end_consensus,
+    "times" : times,
+    "None" : void,
+}
+
+def intent_extractor(bot, update):
+    intent = intent_parser.extract_intent(update.message.text)
+    global listening
+    feedback, give_reply, listening = gf.give_feedback(intent,listening)
+    if give_reply:
+        bot.sendMessage(update.message.chat_id, text=feedback)
+
+    process_callback[intent](bot,update)
 
 def error(bot, update, error):
     logger.warn('Update {} caused error {}'.format(update, error))
@@ -99,14 +126,13 @@ def main():
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
 
-    #dp.add_handler(MessageHandler[Filters.text], intent_extractor))
-    #dp.add_handler(MessageHandler[Filters.text], intent_extractor))
-
+    # Parse text for intent
+    dp.add_handler(MessageHandler([Filters.text], intent_extractor))
 
     # on different commands - answer in Telegram
-    # dp.add_handler(CommandHandler('start_consensus', start_consensus))
-    # dp.add_handler(CommandHandler('end_consensus', end_consensus))
-    # dp.add_handler(CommandHandler('times', times))
+    dp.add_handler(CommandHandler('start_consensus', start_consensus))
+    dp.add_handler(CommandHandler('end_consensus', end_consensus))
+    dp.add_handler(CommandHandler('times', times))
 
     # log all errors
     dp.add_error_handler(error)
