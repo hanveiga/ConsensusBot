@@ -21,6 +21,7 @@ import bots.meetingsuggestor as ms
 from parsing.MessageParser import MessageParser as mp
 import parsing.IntentFeedback as gf
 from parsing.States import States
+from collections import defaultdict
 
 
 from settigns import TOKEN
@@ -131,6 +132,24 @@ def times(bot, update):
         users_dict_id_to_username[user.id] = user.username
     print "added time"
 
+def export(bot, update):
+    """Adds data entities proposed by user
+
+    :param bot:
+    :param update: telegranm.ext.Update
+    :return:
+    """
+    all_options = []
+    preferences = defaultdict(list)
+    if message_stack == []:
+        bot.sendMessage(update.message.chat_id, text='There are no entries to export.')
+    else:
+        for entry in message_stack:
+            preferences[entry.user].append(entry.list_of_times)
+            all_options.append(entry.list_of_times)
+    print preferences
+    print all_options
+    # call doodle functions
 
 def void(bot, update):
     """
@@ -180,6 +199,7 @@ def main():
     dp.add_handler(CommandHandler('start_consensus', start_consensus))
     dp.add_handler(CommandHandler('end_consensus', end_consensus))
     dp.add_handler(CommandHandler('times', times))
+    dp.add_handler(CommandHandler('export', export))
 
     # log all errors
     dp.add_error_handler(error)
