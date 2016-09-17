@@ -64,9 +64,9 @@ class ResultObject:
             return 1
         if self.value < other.value:
             return -1
-        if len(self.users_to_ask) > len(self.users_to_ask):
+        if len(self.users_to_ask) < len(other.users_to_ask):
             return 1
-        if len(self.users_to_ask) < len(self.users_to_ask):
+        if len(self.users_to_ask) > len(other.users_to_ask):
             return -1
         if self.date_from > other.date_from:
             return -1
