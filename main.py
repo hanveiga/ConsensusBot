@@ -97,9 +97,16 @@ def times(bot, update):
     print "added time"
 
 def void(bot, update):
+    """
+
+    :param bot:
+    :param update:
+    :return: Nothing. This is to handle irrelevant conversations
+    """
     print "Nothing"
 
-process_callback =  {
+process_callback = {
+
     "start" : start_consensus,
     "end" :   end_consensus,
     "times" : times,
@@ -107,6 +114,12 @@ process_callback =  {
 }
 
 def intent_extractor(bot, update):
+    """
+
+    :param bot:
+    :param update:
+    :return: Parses the intent and calls the appropriate callback
+    """
     intent = intent_parser.extract_intent(update.message.text)
     global listening
     feedback, give_reply, listening = gf.give_feedback(intent,listening)
