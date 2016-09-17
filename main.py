@@ -86,7 +86,9 @@ def end_consensus(bot, update):
     # a, b = meeting
     # start, end = a
     new_consensus = ms.get_suggested_meetings_topology_sort(message_stack, meeting_length)
-    _, start, end, users = new_consensus[0]
+    start = new_consensus[0].date_from
+    end = new_consensus[0].date_to
+    users = new_consensus[0].users_to_ask
     if users == []:
         bot.sendMessage(update.message.chat_id, text="We have a consensus")
         text = 'A date could be between {} and {}'.format(start.strftime(DATA_FORMAT), end.strftime(DATA_FORMAT))

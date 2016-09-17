@@ -52,6 +52,27 @@ def _get_scores(timestamps_list, score_modifier, right_window, left_window, wind
     return score
 
 
+class ResultObject:
+    def __init__(self, value, date_from, date_to, users_to_ask):
+        self.value = value
+        self.date_from = date_from
+        self.date_to = date_to
+        self.users_to_ask = users_to_ask
+
+    def __cmp__(self, other):
+        if self.value > other.value:
+            return 1
+        if self.value < other.value:
+            return -1
+        if len(self.users_to_ask) > len(self.users_to_ask):
+            return 1
+        if len(self.users_to_ask) < len(self.users_to_ask):
+            return -1
+        if self.date_from > other.date_from:
+            return -1
+        return 1
+
+
 def get_suggested_meetings_topology_sort(list_of_data, window_size):
     split_by_users = {}
     for element in list_of_data:
@@ -125,7 +146,7 @@ def get_suggested_meetings_topology_sort(list_of_data, window_size):
     right_window = left_window + timedelta(hours=window_size)
     # arbitrary number
     # score, from, to, bad users
-    result_heap = []
+    results = []
     users_list = ordered_by_users.keys()
 
     # algorithm with negations
@@ -145,8 +166,9 @@ def get_suggested_meetings_topology_sort(list_of_data, window_size):
                 users_to_ask.append(user)
             total_score += score
 
-        heapq.heappush(result_heap, (total_score, left_window, right_window, users_to_ask,))
+        results.append(ResultObject(total_score, left_window, right_window, users_to_ask))
         right_window += timedelta(hours=1)
         left_window += timedelta(hours=1)
 
-    return heapq.nlargest(5, result_heap)
+    x = sorted(results, reverse=True)
+    return sorted(results, reverse=True)[:5]

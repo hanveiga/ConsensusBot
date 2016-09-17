@@ -74,8 +74,10 @@ def simulate_bot_session(meeting_suggestion, case='baseline'):
 def get_consensus(message_stack, meeting_suggestion):
     meeting_length = 2
     new_consensus = meeting_suggestion(message_stack, meeting_length)
-    _, start, end, users = new_consensus[0]
 
+    start = new_consensus[0].date_from
+    end = new_consensus[0].date_to
+    users = new_consensus[0].users_to_ask
     if users == []:
         print "We have a consensus"
         print 'A date could be between {} and {}'.format(start.strftime(DATA_FORMAT), end.strftime(DATA_FORMAT))
