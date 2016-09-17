@@ -63,7 +63,6 @@ def start_consensus(bot, update):
             meeting_length = int(new_meeting_len)
             return
 
-
 def end_consensus(bot, update):
     """Returns reasoning result (in future it will be running bot queries)
 
@@ -79,9 +78,7 @@ def end_consensus(bot, update):
 
     if ms.get_suggested_meetings(times_availability) == []:
         print "Can't give meeting output yet"
-        reply_keyboard = [['Yes', 'No']]
-        bot.sendMessage(update.message.chat_id, text="I can't schedule for you yet. Tell me when you are free",
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+        bot.sendMessage(update.message.chat_id, text="I can't schedule for you yet. Tell me when you are free")
         return
 
 
@@ -96,10 +93,16 @@ def end_consensus(bot, update):
         bot.sendMessage(update.message.chat_id, text=text)
 
     else:
+        reply_keyboard = [['Yes', 'No']]
+
         for user in users:
-            schedule_text = "@"+str(user)
-            schedule_text = schedule_text + 'Can you make it between {} and {}'.format(start.strftime(DATA_FORMAT), end.strftime(DATA_FORMAT))
-            bot.sendMessage(update.message.chat_id, text= schedule_text)
+            global  users_dict_id_to_username
+            schedule_text = "@"+users_dict_id_to_username[user]
+            schedule_text = schedule_text + ' Can you make it between {} and {}'.format(start.strftime(DATA_FORMAT),
+                                                                                        end.strftime(DATA_FORMAT),)
+            bot.sendMessage(update.message.chat_id, text= schedule_text,
+                            reply_markup=ReplyKeyboardMarkup(reply_keyboard,resize_keyboard = True,
+                                                             one_time_keyboard=True,selective=True))
 
 
 def times(bot, update):
