@@ -33,7 +33,7 @@ message_stack = []
 listening = False
 intent_parser = mp()
 DATA_FORMAT = '%H:%M %Y-%m-%d'
-
+users_dict_id_to_username = {}
 
 # Define a few command handlers. These usually take the two arguments bot and
 # update. Error handlers also receive the raised TelegramError object in error.
@@ -58,6 +58,7 @@ def start_consensus(bot, update):
             global meeting_length
             meeting_length = int(new_meeting_len)
             return
+
 
 def end_consensus(bot, update):
     """Returns reasoning result (in future it will be running bot queries)
@@ -95,9 +96,11 @@ def times(bot, update):
     """
     if not listening:
         return
-    a = data.DataMessage(update.message.from_user,update.message)
-    # add datamessage to a global queue?
-    message_stack.append(a)
+    message_stack.append(data.DataMessage(update.message.from_user, update.message))
+    user = update.message.from_user
+    global users_dict_id_to_username
+    if user.id not in users_dict_id_to_username:
+        users_dict_id_to_username[user.id] = user.username
     print "added time"
 
 
