@@ -27,12 +27,12 @@ for meeting in get_suggested_meetings([interval1, interval2, interval3]):
     print meeting
 '''
 
-MAX_SCORE_USER_PLUS = 2
-MAX_SCORE_USER_MINUS = -2
+MAX_SCORE_USER_PLUS = 2.0
+MAX_SCORE_USER_MINUS = -2.0
 
 
 def _get_scores(timestamps_list, score_modifier, right_window, left_window, window_size):
-    score = 0
+    score = 0.0
     for entity in timestamps_list:
         if entity[0] > right_window:
             return score
@@ -42,13 +42,13 @@ def _get_scores(timestamps_list, score_modifier, right_window, left_window, wind
             score += score_modifier
         elif entity[1] > right_window and entity[0] >= left_window:
             time_diff = right_window - entity[0]
-            score += score_modifier*(time_diff.seconds/(window_size*60*60))
+            score += score_modifier*(time_diff.seconds/float(window_size*60*60))
         elif entity[1] > left_window and entity[0] <= left_window:
             time_diff = entity[1] - left_window
-            score += score_modifier*(time_diff.seconds/(window_size*60*60))
+            score += score_modifier*(time_diff.seconds/float(window_size*60*60))
         elif entity[1] > left_window and entity[0] > left_window:
             time_diff = entity[1] - entity[0]
-            score += score_modifier*(time_diff.seconds/(window_size*60*60))
+            score += score_modifier*(time_diff.seconds/float(window_size*60*60))
     return score
 
 
@@ -58,8 +58,8 @@ def get_suggested_meetings_topology_sort(list_of_data, window_size):
         if element.user not in split_by_users:
             # from /to /creation/ valuation
             split_by_users[element.user] = []
-        for date_from, date_to in element.list_of_times:
-            split_by_users[element.user].append((date_from, date_to, element.created_at, True,))
+        for date_from, date_to, flag_av in element.list_of_times:
+            split_by_users[element.user].append((date_from, date_to, element.created_at, (not flag_av),))
 
     min_bound = None
     max_bound = None
@@ -75,29 +75,51 @@ def get_suggested_meetings_topology_sort(list_of_data, window_size):
             min_bound = min(val[0], min_bound)
             max_bound = max(val[1], max_bound)
 
+    min_bound -= timedelta(hours=window_size)
+    max_bound += timedelta(hours=window_size)
     # right now only true valuation
     joined_plus_by_users = {}
     joined_minus_by_users = {}
-    #TODO add them
 
-    # TODO(scezar): add minus and care of time override!
     for user, times in ordered_by_users.items():
-        returned_list = []
+        returned_list_plus = []
+        returned_list_minus = []
         lower_bound = None
         current_upper_bound = None
-        for t in times:
+        current_flag = None
+        current_adding_time = None
+        for time_tup in times:
             if not lower_bound:
-                lower_bound = t[0]
-                current_upper_bound = t[1]
-            elif current_upper_bound >= t[0]:
-                current_upper_bound = max(t[1], current_upper_bound)
-            else:
-                returned_list.append((lower_bound, current_upper_bound,))
-                lower_bound = t[0]
-                current_upper_bound = t[1]
+                lower_bound, current_upper_bound, current_adding_time, current_flag = time_tup
+            elif current_upper_bound >= time_tup[0]:
 
-        returned_list.append((lower_bound, current_upper_bound,))
-        joined_plus_by_users[user] = returned_list
+                if time_tup[3] == current_flag:
+                    current_upper_bound = max(time_tup[1], current_upper_bound)
+                else:
+                    if current_adding_time > time_tup[2]:
+                        continue
+                    # where override can happen not the exact algorithm!
+                    current_upper_bound = time_tup[1]
+                    if lower_bound < current_upper_bound:
+                        if current_flag:
+                            returned_list_plus.append((lower_bound, current_upper_bound,))
+                        else:
+                            returned_list_minus.append((lower_bound, current_upper_bound,))
+                    lower_bound, current_upper_bound, current_adding_time, current_flag = time_tup
+
+            else:
+                if current_flag:
+                    returned_list_plus.append((lower_bound, current_upper_bound,))
+                else:
+                    returned_list_minus.append((lower_bound, current_upper_bound,))
+                lower_bound, current_upper_bound, current_adding_time, current_flag = time_tup
+
+        if current_flag:
+            returned_list_plus.append((lower_bound, current_upper_bound,))
+        else:
+            returned_list_minus.append((lower_bound, current_upper_bound,))
+        joined_plus_by_users[user] = returned_list_plus
+        joined_minus_by_users[user] = returned_list_minus
 
     left_window = min_bound
     right_window = left_window + timedelta(hours=window_size)
@@ -105,6 +127,7 @@ def get_suggested_meetings_topology_sort(list_of_data, window_size):
     # score, from, to, bad users
     result_heap = []
     users_list = ordered_by_users.keys()
+
     # algorithm with negations
     while right_window <= max_bound:
         # don t care about complexity

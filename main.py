@@ -33,7 +33,7 @@ message_stack = []
 listening = False
 intent_parser = mp()
 DATA_FORMAT = '%H:%M %Y-%m-%d'
-
+users_dict_id_to_username = {}
 
 # Define a few command handlers. These usually take the two arguments bot and
 # update. Error handlers also receive the raised TelegramError object in error.
@@ -46,6 +46,8 @@ def start_consensus(bot, update):
     """
     # TODO(scezar): right now requested format is /start_consensus int h
     global message_stack
+    global listening
+    listening = True
     message_stack = []
     operated_message = update.message.text
     new_meeting_len = ''
@@ -57,6 +59,7 @@ def start_consensus(bot, update):
             meeting_length = int(new_meeting_len)
             return
 
+
 def end_consensus(bot, update):
     """Returns reasoning result (in future it will be running bot queries)
 
@@ -64,15 +67,15 @@ def end_consensus(bot, update):
     :param update: telegranm.ext.Update
     :return:
     """
-    times_availability = []
-    for message in message_stack:
-        for interval in message.list_of_times:
-            times_availability.append(interval)
-
-    if ms.get_suggested_meetings(times_availability) == []:
-        print "Can't give meeting output yet"
-        bot.sendMessage(update.message.chat_id, text="I can't schedule for you yet. Tell me when you are free")
-        return
+    # times_availability = []
+    # for message in message_stack:
+    #     for interval in message.list_of_times:
+    #         times_availability.append(interval)
+    #
+    # if ms.get_suggested_meetings(times_availability) == []:
+    #     print "Can't give meeting output yet"
+    #     bot.sendMessage(update.message.chat_id, text="I can't schedule for you yet. Tell me when you are free")
+    #     return
 
     # meeting = ms.get_suggested_meetings(times_availability)[0] # takes highest ranked option
     # a, b = meeting
@@ -93,9 +96,11 @@ def times(bot, update):
     """
     if not listening:
         return
-    a = data.DataMessage(update.message.from_user,update.message)
-    # add datamessage to a global queue?
-    message_stack.append(a)
+    message_stack.append(data.DataMessage(update.message.from_user, update.message))
+    user = update.message.from_user
+    global users_dict_id_to_username
+    if user.id not in users_dict_id_to_username:
+        users_dict_id_to_username[user.id] = user.username
     print "added time"
 
 
