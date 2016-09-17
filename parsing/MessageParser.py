@@ -45,7 +45,7 @@ class MessageParser():
         elif grain == 'month':
             dateto = datetime +timedelta(days=7*d)
         else:
-            dateto = datetime
+            dateto = datetime +timedelta(hours=1*d)
         return dateto
 
     def extract_intent(self,message):
@@ -60,7 +60,7 @@ class MessageParser():
         else:
             return "None"
 
-#m = MessageParser()
-#print m.extract_datetime_range('I am free after 5pm')
+m = MessageParser()
+print m.extract_datetime_range('I am free now')
 
 
