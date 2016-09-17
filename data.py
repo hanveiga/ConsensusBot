@@ -25,5 +25,10 @@ class DataMessage:
 
     def get_times(self):
         m = mp.MessageParser()
-        list_of_times = [m.extract_datetime_range(string) for string in self.parsed]
+        list_of_times = []
+        for string in self.parsed:
+            try:
+                list_of_times.append(m.extract_datetime_range(string))
+            except:
+                continue
         return list_of_times
