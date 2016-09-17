@@ -1,5 +1,6 @@
 import re
 import parsing.MessageParser as mp
+import nltk
 
 class DataMessage:
 
@@ -18,9 +19,9 @@ class DataMessage:
 
     def parse_text(self, message_text):
         #sentences = re.findall("[A-Z].*?[\.!?]", message_text, re.MULTILINE | re.DOTALL)
-        se_break = re.compile("""[.!?] \s+  """, re.VERBOSE)
+        se_break = re.compile("""[.!?|,!?] \s """, re.VERBOSE)
         sentences = se_break.split(message_text)
-        print sentences
+        #print sentences
         return sentences
 
     def get_times(self):
