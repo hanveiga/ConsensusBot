@@ -66,7 +66,7 @@ def end_consensus(bot, update):
     meeting = ms.get_suggested_meetings(times_availability)[0] # takes highest ranked option
     a, b = meeting
     start, end = a
-    text= 'A date could be between %s and %s'%(start.strftime('%I:%M %Y-%m-%d'),end.strftime('%I:%M %Y-%m-%d'))
+    text= 'A date could be between %s and %s'%(start.strftime('%H:%M %Y-%m-%d'),end.strftime('%H:%M %Y-%m-%d'))
     bot.sendMessage(update.message.chat_id, text= text)
     #raise NotImplemented
 
