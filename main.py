@@ -26,8 +26,8 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 meeting_length = 2
-
 message_stack = []
+
 
 # Define a few command handlers. These usually take the two arguments bot and
 # update. Error handlers also receive the raised TelegramError object in error.
@@ -39,7 +39,8 @@ def start_consensus(bot, update):
     :return:
     """
     # TODO(scezar): right now requested format is /start_consensus int h
-    # TODO(scezar): clean main data structure (dict)
+    global message_stack
+    message_stack = []
     operated_message = update.message.text
     new_meeting_len = ''
     for letter in operated_message:
@@ -66,9 +67,8 @@ def end_consensus(bot, update):
     meeting = ms.get_suggested_meetings(times_availability)[0] # takes highest ranked option
     a, b = meeting
     start, end = a
-    text= 'A date could be between %s and %s'%(start.strftime('%H:%M %Y-%m-%d'),end.strftime('%H:%M %Y-%m-%d'))
-    bot.sendMessage(update.message.chat_id, text= text)
-    #raise NotImplemented
+    text = 'A date could be between {} and {}'.format(start.strftime('%H:%M %Y-%m-%d'),end.strftime('%H:%M %Y-%m-%d'))
+    bot.sendMessage(update.message.chat_id, text=text)
 
 
 def times(bot, update):
@@ -81,9 +81,6 @@ def times(bot, update):
     a = data.DataMessage(update.message.from_user,update.message)
     # add datamessage to a global queue?
     message_stack.append(a)
-    #print a.list_of_times
-    #raise NotImplemented
-    #bot.sendMessage(update.message.chat_id, text=update.message.text)
 
 
 def error(bot, update, error):
