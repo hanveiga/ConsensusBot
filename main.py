@@ -40,6 +40,7 @@ intent_parser = mp()
 #DATA_FORMAT = '%H:%M %Y-%m-%d'
 HOUR_FORMAT = '%H:%M'
 DATA_FORMAT = '%d/%m'
+DATE_FORMAT = '%H:%M %d/%m'
 users_dict_id_to_username = {}
 
 # Define a few command handlers. These usually take the two arguments bot and
@@ -132,7 +133,7 @@ def times(bot, update):
         users_dict_id_to_username[user.id] = user.username
     print "added time"
 
-def export(message_stack):
+def export(bot,update):
     """Adds data entities proposed by user
 
     :param bot:
@@ -152,7 +153,7 @@ def export(message_stack):
     if message_stack == []:
         bot.sendMessage(update.message.chat_id, text='There are no entries to export.')
     else:
-        new_consensus = meeting_suggestion(message_stack, meeting_length)
+        new_consensus = ms.get_suggested_meetings_topology_sort(message_stack, meeting_length)
         for result in new_consensus:
             print result.date_from
             print result.date_to
