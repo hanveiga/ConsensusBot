@@ -7,13 +7,13 @@ class DataMessage:
 
     def __init__(self, user, message):
         self.user = user.id
-        self.raw_text = message.text
+        #self.raw_text = message.text
         self.created_at = message.date
-        self.parsed = self.parse_text()
+        self.parsed = self.parse_text(message.text)
         self.list_of_times = self.get_times()
 
-    def parse_text(self):
-        list_text = self.raw_text.split('.')
+    def parse_text(self,message_text):
+        list_text = message_text.split('.')
         print list_text
         return list_text
 
