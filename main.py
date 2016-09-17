@@ -14,14 +14,17 @@ Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram import ReplyKeyboardMarkup
 import logging
 import data
 import bots.meetingsuggestor as ms
 from parsing.MessageParser import MessageParser as mp
 import parsing.IntentFeedback as gf
+from parsing.States import States
 
 
 from settigns import TOKEN
+
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -31,6 +34,7 @@ logger = logging.getLogger(__name__)
 meeting_length = 2
 message_stack = []
 listening = False
+state = States.STARTED
 intent_parser = mp()
 DATA_FORMAT = '%H:%M %Y-%m-%d'
 
@@ -71,7 +75,9 @@ def end_consensus(bot, update):
 
     if ms.get_suggested_meetings(times_availability) == []:
         print "Can't give meeting output yet"
-        bot.sendMessage(update.message.chat_id, text="I can't schedule for you yet. Tell me when you are free")
+        reply_keyboard = [['Yes', 'No']]
+        bot.sendMessage(update.message.chat_id, text="I can't schedule for you yet. Tell me when you are free",
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
         return
 
     # meeting = ms.get_suggested_meetings(times_availability)[0] # takes highest ranked option
@@ -79,9 +85,14 @@ def end_consensus(bot, update):
     # start, end = a
     new_consensus = ms.get_suggested_meetings_topology_sort(message_stack, meeting_length)
     _, start, end, users = new_consensus[0]
-    text = 'A date could be between {} and {}'.format(start.strftime(DATA_FORMAT), end.strftime(DATA_FORMAT))
+    if users == []:
+        bot.sendMessage(update.message.chat_id, text="We have a consensus")
+        text = 'A date could be between {} and {}'.format(start.strftime(DATA_FORMAT), end.strftime(DATA_FORMAT))
+        bot.sendMessage(update.message.chat_id, text=text)
 
-    bot.sendMessage(update.message.chat_id, text=text)
+    else:
+        for user in users:
+            bot.sendMessage(update.message.chat_id, text= "@"+str(user))
 
 
 def times(bot, update):
@@ -91,9 +102,9 @@ def times(bot, update):
     :param update: telegranm.ext.Update
     :return:
     """
-    if not listening:
+    if state.value < States.LISTENING.value:
         return
-    a = data.DataMessage(update.message.from_user,update.message)
+    a = data.DataMessage(update.message.from_user,update.message )
     # add datamessage to a global queue?
     message_stack.append(a)
     print "added time"
@@ -101,7 +112,6 @@ def times(bot, update):
 
 def void(bot, update):
     """
-
     :param bot:
     :param update:
     :return: Nothing. This is to handle irrelevant conversations
@@ -118,14 +128,13 @@ process_callback = {
 
 def intent_extractor(bot, update):
     """
-
     :param bot:
     :param update:
     :return: Parses the intent and calls the appropriate callback
     """
     intent = intent_parser.extract_intent(update.message.text)
-    global listening
-    feedback, give_reply, listening = gf.give_feedback(intent,listening)
+    global state
+    feedback, give_reply, state = gf.give_feedback(intent,state)
     if give_reply:
         bot.sendMessage(update.message.chat_id, text=feedback)
 

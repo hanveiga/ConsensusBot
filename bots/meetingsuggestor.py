@@ -58,7 +58,7 @@ def get_suggested_meetings_topology_sort(list_of_data, window_size):
         if element.user not in split_by_users:
             # from /to /creation/ valuation
             split_by_users[element.user] = []
-        for date_from, date_to in element.list_of_times:
+        for date_from, date_to, whatever in element.list_of_times:
             split_by_users[element.user].append((date_from, date_to, element.created_at, True,))
 
     min_bound = None

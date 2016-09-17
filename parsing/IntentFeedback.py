@@ -1,29 +1,31 @@
+from parsing.States import States
 
-def start(listening):
+def start(state):
     give_reply = False
 
-    if listening == False:
+    if state == States.STARTED:
         give_reply = True
 
-    listening = True
-    return "Let's start a meeting schedule" , give_reply, listening
+    state = States.LISTENING
 
-def end(listening):
-    return "Let's see when we can meet", False , listening
+    return "Let's start a meeting schedule" , give_reply, state
 
-def do_nothing(listening):
-    return "Nothing to do" , False, listening
+def end(state):
+    return "Let's see when we can meet", False , state
 
-def give_feedback(message, is_listening):
+def do_nothing(state):
+    return "Nothing to do" , False, state
+
+def give_feedback(message, current_state):
     """
 
     :param message:
-    :param is_listening:
-    :return: [feedback_message_str, should_respond_to_user_bool, is_listen_boolean ]
+    :param current_state:
+    :return: [feedback_message_str, should_respond_to_user_bool, new_state ]
     """
     if message == "start":
-        return start(is_listening)
+        return start(current_state)
     elif message == "end":
-        return end(is_listening)
+        return end(current_state)
     else:
-        return do_nothing(is_listening)
+        return do_nothing(current_state)
