@@ -13,6 +13,9 @@ class MessageParser():
     def extract_datetime_range(self,message):
         resp = self.client.message(message)
         resp = json.loads(str(resp).replace("u'","'").replace("'",'"'))
+        isnegative  = False
+        if "negative" in resp['entities']:
+            isnegative = True
         resp = resp['entities']['datetime'][0]
         if resp['type'] == 'interval':
             return parser.parse(resp['from']['value']) ,parser.parse(resp['to']['value'])
@@ -26,7 +29,8 @@ class MessageParser():
                 dateto = datefrom +timedelta(days=7)
             if resp['grain'] == 'month':
                 dateto = datefrom +timedelta(days=30)
-            return datefrom,dateto
+            return datefrom,dateto,isnegative
+
     def extract_intent(self,message):
         resp = self.client.message(message)
         resp = json.loads(str(resp).replace("u'","'").replace("'",'"'))
@@ -41,6 +45,6 @@ class MessageParser():
             return "None"
 
 #m = MessageParser()
-#print m.extract_intent('how about having a meeting')
+#print m.extract_datetime_range('i can do it on friday')
 
 
