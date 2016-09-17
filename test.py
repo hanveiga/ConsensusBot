@@ -7,15 +7,26 @@ def generate_dialog(case='baseline'):
     if case =='baseline':
         dialog.append({'user_e': 'John',
                        'created_at': datetime.now(),
-                       'message_e': 'I can do from 6 on Sunday'})
+                       'message_e': 'I can do from 6 on Sunday.'})
         dialog.append({'user_e': 'Mark',
                        'created_at': datetime.now(),
-                       'message_e': 'I can do at 9 on Sunday'})
+                       'message_e': "I can do at 9 on Sunday."})
         dialog.append({'user_e': 'Jane',
                        'created_at': datetime.now(),
                        'message_e': 'I can do at 9 on Sunday. Or on Saturday at 2pm.'})
     elif case=='negation':
-        pass
+        dialog.append({'user_e': 'John',
+                       'created_at': datetime.now(),
+                       'message_e': 'I can do from 6 on Sunday.'})
+        dialog.append({'user_e': 'Mark',
+                       'created_at': datetime.now(),
+                       'message_e': "I can do at 9 on Sunday. I can not do 9 on Monday."})
+        dialog.append({'user_e': 'Jane',
+                       'created_at': datetime.now(),
+                       'message_e': "I can do at 9 on Sunday. Or on Saturday at 2pm."})
+        dialog.append({'user_e': 'Jane',
+                       'created_at': datetime.now(),
+                       'message_e': "I will not be able to come on Friday"})
     else:
         pass
 
@@ -25,7 +36,9 @@ def generate_message_stack(dialog):
     list_of_datamessage = []
     for entry in dialog:
         print '%s : %s' %(entry['user_e'], entry['message_e'])
-        list_of_datamessage.append(DataMessage(testing=True,**entry))
+        mes = DataMessage(testing=True,**entry)
+        print mes.list_of_times
+        list_of_datamessage.append(mes)
 
     return list_of_datamessage
 
@@ -51,5 +64,5 @@ def get_consensus(message_stack, meeting_suggestion):
 
 if __name__=='__main__':
     meeting_suggestion = ms.get_suggested_meetings
-    simulate_bot_session(meeting_suggestion)
+    simulate_bot_session(meeting_suggestion, case='negation')
 
