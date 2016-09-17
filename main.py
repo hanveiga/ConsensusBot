@@ -32,6 +32,7 @@ meeting_length = 2
 message_stack = []
 listening = False
 intent_parser = mp()
+DATA_FORMAT = '%H:%M %Y-%m-%d'
 
 
 # Define a few command handlers. These usually take the two arguments bot and
@@ -56,8 +57,6 @@ def start_consensus(bot, update):
             meeting_length = int(new_meeting_len)
             return
 
-
-
 def end_consensus(bot, update):
     """Returns reasoning result (in future it will be running bot queries)
 
@@ -75,10 +74,13 @@ def end_consensus(bot, update):
         bot.sendMessage(update.message.chat_id, text="I can't schedule for you yet. Tell me when you are free")
         return
 
-    meeting = ms.get_suggested_meetings(times_availability)[0] # takes highest ranked option
-    a, b = meeting
-    start, end = a
-    text = 'A date could be between {} and {}'.format(start.strftime('%H:%M %Y-%m-%d'),end.strftime('%H:%M %Y-%m-%d'))
+    # meeting = ms.get_suggested_meetings(times_availability)[0] # takes highest ranked option
+    # a, b = meeting
+    # start, end = a
+    new_consensus = ms.get_suggested_meetings_topology_sort(message_stack, meeting_length)
+    _, start, end, users = new_consensus[0]
+    text = 'A date could be between {} and {}'.format(start.strftime(DATA_FORMAT), end.strftime(DATA_FORMAT))
+
     bot.sendMessage(update.message.chat_id, text=text)
 
 
@@ -95,6 +97,7 @@ def times(bot, update):
     # add datamessage to a global queue?
     message_stack.append(a)
     print "added time"
+
 
 def void(bot, update):
     """

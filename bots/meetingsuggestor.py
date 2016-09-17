@@ -1,4 +1,6 @@
+import heapq
 from datetime import timedelta
+
 def get_suggested_meetings(intervals):
     events = sorted([x[0] for x in intervals]+[x[1] for x in intervals])
     meetings = dict()
@@ -39,13 +41,13 @@ def _get_scores(timestamps_list, score_modifier, right_window, left_window, wind
         if entity[1] > right_window and entity[0] < left_window:
             score += score_modifier
         elif entity[1] > right_window and entity[0] >= left_window:
-            time_diff = entity[0] - right_window
+            time_diff = right_window - entity[0]
             score += score_modifier*(time_diff.seconds/(window_size*60*60))
         elif entity[1] > left_window and entity[0] <= left_window:
-            time_diff = left_window - entity[1]
+            time_diff = entity[1] - left_window
             score += score_modifier*(time_diff.seconds/(window_size*60*60))
         elif entity[1] > left_window and entity[0] > left_window:
-            time_diff =entity[0] - entity[1]
+            time_diff = entity[1] - entity[0]
             score += score_modifier*(time_diff.seconds/(window_size*60*60))
     return score
 
@@ -53,7 +55,7 @@ def _get_scores(timestamps_list, score_modifier, right_window, left_window, wind
 def get_suggested_meetings_topology_sort(list_of_data, window_size):
     split_by_users = {}
     for element in list_of_data:
-        if not split_by_users[element.user]:
+        if element.user not in split_by_users:
             # from /to /creation/ valuation
             split_by_users[element.user] = []
         for date_from, date_to in element.list_of_times:
@@ -65,10 +67,10 @@ def get_suggested_meetings_topology_sort(list_of_data, window_size):
     for user, values in split_by_users.items():
         ordered_by_users[user] = sorted(values)
         # hack less code
-        min_bound = ordered_by_users[user][0]
-        max_bound = ordered_by_users[user][1]
+        min_bound = ordered_by_users[user][0][0]
+        max_bound = ordered_by_users[user][0][1]
 
-    for values in split_by_users:
+    for _, values in split_by_users.items():
         for val in values:
             min_bound = min(val[0], min_bound)
             max_bound = max(val[1], max_bound)
@@ -88,7 +90,7 @@ def get_suggested_meetings_topology_sort(list_of_data, window_size):
                 lower_bound = t[0]
                 current_upper_bound = t[1]
             elif current_upper_bound >= t[0]:
-                current_upper_bound = t[1]
+                current_upper_bound = max(t[1], current_upper_bound)
             else:
                 returned_list.append((lower_bound, current_upper_bound,))
                 lower_bound = t[0]
@@ -100,11 +102,11 @@ def get_suggested_meetings_topology_sort(list_of_data, window_size):
     left_window = min_bound
     right_window = left_window + timedelta(hours=window_size)
     # arbitrary number
-    # from, to, score, bad users
-    best_score = (None, None, -1000, [])
+    # score, from, to, bad users
+    result_heap = []
     users_list = ordered_by_users.keys()
     # algorithm with negations
-    while right_window > max_bound:
+    while right_window <= max_bound:
         # don t care about complexity
         users_to_ask = []
         total_score = 0
@@ -114,13 +116,14 @@ def get_suggested_meetings_topology_sort(list_of_data, window_size):
             score += _get_scores(joined_plus_by_users.get(user, []), MAX_SCORE_USER_PLUS, right_window,
                                  left_window, window_size)
 
-            score += _get_scores(joined_plus_by_users.get(user, []), MAX_SCORE_USER_MINUS, right_window,
+            score += _get_scores(joined_minus_by_users.get(user, []), MAX_SCORE_USER_MINUS, right_window,
                                  left_window, window_size)
             if score != 2:
                 users_to_ask.append(user)
             total_score += score
 
-        if total_score > best_score[2]:
-            best_score = (left_window, right_window, total_score, users_to_ask)
+        heapq.heappush(result_heap, (total_score, left_window, right_window, users_to_ask,))
         right_window += timedelta(hours=1)
         left_window += timedelta(hours=1)
+
+    return heapq.nlargest(5, result_heap)
