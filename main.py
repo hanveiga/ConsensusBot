@@ -92,7 +92,9 @@ def end_consensus(bot, update):
 
     else:
         for user in users:
-            bot.sendMessage(update.message.chat_id, text= "@"+str(user))
+            schedule_text = "@"+str(user)
+            schedule_text = schedule_text + 'Can you make it between {} and {}'.format(start.strftime(DATA_FORMAT), end.strftime(DATA_FORMAT))
+            bot.sendMessage(update.message.chat_id, text= schedule_text)
 
 
 def times(bot, update):
