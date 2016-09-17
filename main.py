@@ -28,6 +28,8 @@ logger = logging.getLogger(__name__)
 meeting_length = 2
 message_stack = []
 
+listening = False
+
 
 # Define a few command handlers. These usually take the two arguments bot and
 # update. Error handlers also receive the raised TelegramError object in error.
@@ -39,6 +41,8 @@ def start_consensus(bot, update):
     :return:
     """
     # TODO(scezar): right now requested format is /start_consensus int h
+    if not listening:
+        listening = True
     global message_stack
     message_stack = []
     operated_message = update.message.text
@@ -95,10 +99,14 @@ def main():
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
 
+    #dp.add_handler(MessageHandler[Filters.text], intent_extractor))
+    #dp.add_handler(MessageHandler[Filters.text], intent_extractor))
+
+
     # on different commands - answer in Telegram
-    dp.add_handler(CommandHandler('start_consensus', start_consensus))
-    dp.add_handler(CommandHandler('end_consensus', end_consensus))
-    dp.add_handler(CommandHandler('times', times))
+    # dp.add_handler(CommandHandler('start_consensus', start_consensus))
+    # dp.add_handler(CommandHandler('end_consensus', end_consensus))
+    # dp.add_handler(CommandHandler('times', times))
 
     # log all errors
     dp.add_error_handler(error)

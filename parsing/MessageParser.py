@@ -14,6 +14,7 @@ class MessageParser():
         resp = self.client.message(message)
         resp = json.loads(str(resp).replace("u'","'").replace("'",'"'))
         resp = resp['entities']['datetime'][0]
+        # resp['timezone']='UTC+01'
         if resp['type'] == 'interval':
             return parser.parse(resp['from']['value']) ,parser.parse(resp['to']['value'])
         else:
