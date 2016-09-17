@@ -36,8 +36,11 @@ class MessageParser():
             return datefrom,dateto,isnegative
 
     def infer_missingtime(self,datetime,grain,d):
-        if grain == 'hour':
-            dateto = datetime +timedelta(hours=2*d)
+        if grain == 'hour' or grain == 'minute':
+            if d == 1:
+                dateto = datetime.replace(hour = 23,minute = 59)
+            else:
+                dateto = datetime.replace(hour = 0)
         elif grain == 'day':
             dateto = datetime +timedelta(days=1*d)
         elif grain == 'week':
@@ -60,7 +63,7 @@ class MessageParser():
         else:
             return "None"
 
-m = MessageParser()
-print m.extract_datetime_range('I am free now')
+#m = MessageParser()
+#print m.extract_datetime_range('I am free before 5 pm')
 
 
