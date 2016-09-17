@@ -22,7 +22,7 @@ from parsing.MessageParser import MessageParser as mp
 import parsing.IntentFeedback as gf
 from parsing.States import States
 from collections import defaultdict
-
+import doodle.export_doodle as doodle
 
 from settigns import TOKEN
 
@@ -132,24 +132,40 @@ def times(bot, update):
         users_dict_id_to_username[user.id] = user.username
     print "added time"
 
-def export(bot, update):
+def export(message_stack):
     """Adds data entities proposed by user
 
     :param bot:
     :param update: telegranm.ext.Update
     :return:
     """
-    all_options = []
+    all_users = []
+    for user in message_stack:
+        if user.user in all_users:
+            pass
+        else:
+            all_users.append(user.user)
+
+    all_options_text = []
     preferences = defaultdict(list)
+    full_preferences = defaultdict(list)
     if message_stack == []:
         bot.sendMessage(update.message.chat_id, text='There are no entries to export.')
     else:
-        for entry in message_stack:
-            preferences[entry.user].append(entry.list_of_times)
-            all_options.append(entry.list_of_times)
-    print preferences
-    print all_options
-    # call doodle functions
+        new_consensus = meeting_suggestion(message_stack, meeting_length)
+        for result in new_consensus:
+            print result.date_from
+            print result.date_to
+            print result.users_to_ask
+            all_options_text.append({'text':result.date_from.strftime(DATE_FORMAT)+'-'+result.date_to.strftime(DATE_FORMAT)})
+            for user in all_users:
+                if user in result.users_to_ask:
+                    full_preferences[user].append(0)
+                else:
+                    full_preferences[user].append(1)
+                # positive
+    doodle.generate_doodle(full_preferences,all_options_text)
+
 
 def void(bot, update):
     """
