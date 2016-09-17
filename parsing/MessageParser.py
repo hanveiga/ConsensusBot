@@ -54,7 +54,9 @@ class MessageParser():
     def extract_intent(self,message):
         resp = self.client.message(message)
         resp = resp['entities']
-        if "start" in resp:
+        if "export" in resp:
+            return "export"
+        elif "start" in resp:
             return "start"
         elif "end" in resp:
             return "end"
@@ -63,7 +65,16 @@ class MessageParser():
         else:
             return "None"
 
+    def pretty_print_range(self,time1,time2):
+        if abs(time2-time1).days <= 1 and time1.days == time2.days:
+            return "between "+str(time1.hours)+":"+str(time1.minutes)+" and "+str(time2.hours)+":"+str(time2.minutes)+" on"+ str(time1.days)+"/"+str(time1.months)
+        elif abs(time2-time1).days <= 1 and time1.months == time2.months:
+            return "between "+str(time1.hours)+":"+str(time1.minutes)+" and "+str(time2.hours)+":"+str(time2.minutes)+" on"+ str(time1.days)+"/"+str(time1.months)
+        else:
+            return "between "+str(time1)+" and "+str(time2)
+
 #m = MessageParser()
-#print m.extract_datetime_range('I am free before 5 pm')
+#print m.extract_intent('export')
+
 
 
