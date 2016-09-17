@@ -36,7 +36,9 @@ message_stack = []
 listening = False
 state = States.STARTED
 intent_parser = mp()
-DATA_FORMAT = '%H:%M %Y-%m-%d'
+
+HOUR_FORMAT = '%H:%M'
+DATA_FORMAT = '%d/%m'
 users_dict_id_to_username = {}
 
 # Define a few command handlers. These usually take the two arguments bot and
@@ -87,11 +89,14 @@ def end_consensus(bot, update):
     # meeting = ms.get_suggested_meetings(times_availability)[0] # takes highest ranked option
     # a, b = meeting
     # start, end = a
-
-    _, start, end, users = new_consensus[0]
+    new_consensus = ms.get_suggested_meetings_topology_sort(message_stack, meeting_length)
+    start = new_consensus[0].date_from
+    end = new_consensus[0].date_to
+    users = new_consensus[0].users_to_ask
     if users == []:
         bot.sendMessage(update.message.chat_id, text="We have a consensus")
-        text = 'A date could be between {} and {}'.format(start.strftime(DATA_FORMAT), end.strftime(DATA_FORMAT))
+        string = 'A date could be between' #{} and {} on {}'
+        text = get_text(string,start,end)
         bot.sendMessage(update.message.chat_id, text=text)
 
     else:
@@ -99,6 +104,7 @@ def end_consensus(bot, update):
 
         for user in users:
             global  users_dict_id_to_username
+
             if users_dict_id_to_username[user].username is not []:
                 user_handle = users_dict_id_to_username[user].username
             else:
@@ -107,6 +113,7 @@ def end_consensus(bot, update):
             schedule_text = "@"+ user_handle
             schedule_text = schedule_text + ' can you make it between {} and {}'.format(start.strftime(DATA_FORMAT),
                                                                                         end.strftime(DATA_FORMAT),)
+
             bot.sendMessage(update.message.chat_id, text= schedule_text,
                             reply_markup=ReplyKeyboardMarkup(reply_keyboard,resize_keyboard = True,
                                                              one_time_keyboard=True,selective=True))
@@ -190,6 +197,18 @@ def main():
     # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
 
+
+def get_text(string,start,end):
+    if start.day == end.day:
+        text = string+' {} and {} on {}'.format(start.strftime(HOUR_FORMAT),
+                                               end.strftime(HOUR_FORMAT),
+                                              start.strftime(DATA_FORMAT))
+    else:
+        text = string+' {} on {} and {} on {}'.format(start.strftime(HOUR_FORMAT),
+                                                start.strftime(DATA_FORMAT),
+                                               end.strftime(HOUR_FORMAT),
+                                                end.strftime(DATA_FORMAT))
+    return text
 
 if __name__ == '__main__':
     main()
