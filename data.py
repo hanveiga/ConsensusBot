@@ -15,13 +15,10 @@ class DataMessage:
             self.created_at = message.date
             self.parsed = self.parse_text(message.text)
             self.list_of_times = self.get_times()
+            self.list_of_negative_times = []
 
-
-
-    def parse_text(self,message_text):
-        list_text = message_text.split('.')
-        #print list_text
-        return list_text
+    def parse_text(self, message_text):
+        return message_text.split('.')
 
     def get_times(self):
         m = mp.MessageParser()
