@@ -46,7 +46,21 @@ def generate_dialog(case='baseline'):
                        'message_e': "Sorry about your dog."})
         dialog.append({'user_e': 'Jane',
                        'created_at': datetime.now(),
-                       'message_e': "I won't be able to come on Sunday, but Friday works for me."})
+                       'message_e': "I won't be able to come on Sunday."})
+
+    elif case == 'buddies':
+        dialog.append({'user_e': 'John',
+                       'created_at': datetime.now(),
+                       'message_e': 'I can do between 8pm and 10pm.'})
+        dialog.append({'user_e': 'Mark',
+                       'created_at': datetime.now(),
+                       'message_e': "I can do in two hours"})
+        dialog.append({'user_e': 'Jane',
+                       'created_at': datetime.now(),
+                       'message_e': "Sorry about your dog."})
+        dialog.append({'user_e': 'Jane',
+                       'created_at': datetime.now(),
+                       'message_e': "I won't be able to come on Sunday."})
     else:
         pass
 
@@ -92,5 +106,5 @@ def get_consensus(message_stack, meeting_suggestion):
 
 if __name__=='__main__':
     meeting_suggestion = ms.get_suggested_meetings_topology_sort
-    simulate_bot_session(meeting_suggestion, case='chatter')
+    simulate_bot_session(meeting_suggestion, case='buddies')
 

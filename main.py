@@ -76,7 +76,9 @@ def end_consensus(bot, update):
         for interval in message.list_of_times:
             times_availability.append(interval)
 
-    if ms.get_suggested_meetings(times_availability) == []:
+    new_consensus = ms.get_suggested_meetings_topology_sort(message_stack, meeting_length)
+
+    if new_consensus == []:
         print "Can't give meeting output yet"
         bot.sendMessage(update.message.chat_id, text="I can't schedule for you yet. Tell me when you are free")
         return
@@ -85,7 +87,7 @@ def end_consensus(bot, update):
     # meeting = ms.get_suggested_meetings(times_availability)[0] # takes highest ranked option
     # a, b = meeting
     # start, end = a
-    new_consensus = ms.get_suggested_meetings_topology_sort(message_stack, meeting_length)
+
     _, start, end, users = new_consensus[0]
     if users == []:
         bot.sendMessage(update.message.chat_id, text="We have a consensus")
