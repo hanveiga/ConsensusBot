@@ -42,7 +42,7 @@ def generate_dialog(case='baseline'):
                        'message_e': "Sorry about your dog."})
         dialog.append({'user_e': 'Jane',
                        'created_at': datetime.now(),
-                       'message_e': "I won't be able to come on Friday, but Saturday works for me."})
+                       'message_e': "I won't be able to come on Friday, but Sunday works for me."})
     else:
         pass
 
@@ -72,14 +72,14 @@ def get_consensus(message_stack, meeting_suggestion):
     for message in message_stack:
         for interval in message.list_of_times:
             times_availability.append(interval)
-
-    meeting = meeting_suggestion(times_availability)[0]  # takes highest ranked option
-    a, b = meeting
-    start, end = a
+    window_size = 2
+    meeting = meeting_suggestion(message_stack,window_size)[0]  # takes highest ranked option
+    print meeting
+    a, start, end, c = meeting
     text = 'A date could be between %s and %s'%(start.strftime('%H:%M %Y-%m-%d'),end.strftime('%H:%M %Y-%m-%d'))
     print 'Bot response: ' + text
 
 if __name__=='__main__':
-    meeting_suggestion = ms.get_suggested_meetings
+    meeting_suggestion = ms.get_suggested_meetings_topology_sort
     simulate_bot_session(meeting_suggestion, case='chatter')
 
