@@ -6,7 +6,8 @@ import parsing.MessageParser as mp
 m = mp.MessageParser()
 
 
-DATA_FORMAT = '%H:%M %Y-%m-%d'
+HOUR_FORMAT = '%H:%M'
+DATA_FORMAT = '%d/%m'
 
 def generate_dialog(case='baseline'):
     dialog = []
@@ -51,16 +52,16 @@ def generate_dialog(case='baseline'):
     elif case == 'buddies':
         dialog.append({'user_e': 'John',
                        'created_at': datetime.now(),
-                       'message_e': 'I can do between 8pm and 10pm.'})
+                       'message_e': 'I can do between 8pm and 12pm.'})
         dialog.append({'user_e': 'Mark',
                        'created_at': datetime.now(),
-                       'message_e': "I can do in two hours"})
+                       'message_e': "I can do in 45 minutes"})
         dialog.append({'user_e': 'Jane',
                        'created_at': datetime.now(),
-                       'message_e': "Sorry about your dog."})
+                       'message_e': "Had the most awful day."})
         dialog.append({'user_e': 'Jane',
                        'created_at': datetime.now(),
-                       'message_e': "I won't be able to come on Sunday."})
+                       'message_e': "I can do at half past four."})
     else:
         pass
 
@@ -86,7 +87,7 @@ def simulate_bot_session(meeting_suggestion, case='baseline'):
 
 
 def get_consensus(message_stack, meeting_suggestion):
-    meeting_length = 2
+    meeting_length = 0.25
     new_consensus = meeting_suggestion(message_stack, meeting_length)
 
     start = new_consensus[0].date_from
@@ -101,8 +102,9 @@ def get_consensus(message_stack, meeting_suggestion):
 
         for user in users:
             schedule_text = "@"+user
-            schedule_text = schedule_text + ' Can you make it between {} and {}'.format(start.strftime(DATA_FORMAT),
-                                                                                        end.strftime(DATA_FORMAT),)
+            schedule_text = schedule_text + ' Can you make it between {} and {} on {}'.format(start.strftime(HOUR_FORMAT),
+                                                              end.strftime(HOUR_FORMAT),
+                                                                 start.strftime(DATA_FORMAT))
             print schedule_text
 
 

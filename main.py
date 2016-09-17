@@ -21,6 +21,8 @@ import bots.meetingsuggestor as ms
 from parsing.MessageParser import MessageParser as mp
 import parsing.IntentFeedback as gf
 from parsing.States import *
+from collections import defaultdict
+
 
 
 from settigns import TOKEN
@@ -121,8 +123,10 @@ def end_consensus(bot, update):
                 user_handle = str(user) + " (" + users_dict_id_to_username[user].first_name + ")"
 
             schedule_text = "@"+ user_handle
-            schedule_text = schedule_text + ' can you make it between {} and {}'.format(start.strftime(DATA_FORMAT),
-                                                                                        end.strftime(DATA_FORMAT),)
+            schedule_text = schedule_text + ' can you make it between {} {} and {} {}'.format(start.strftime(HOUR_FORMAT),
+                                                                                           start.strftime(DATA_FORMAT),
+                                                                                        end.strftime(HOUR_FORMAT),
+                                                                                        end.strftime(DATA_FORMAT))
 
             bot.sendMessage(update.message.chat_id, text= schedule_text,
                             reply_markup=ReplyKeyboardMarkup(reply_keyboard,resize_keyboard = True,
@@ -145,6 +149,27 @@ def times(bot, update):
     if user.id not in users_dict_id_to_username:
         users_dict_id_to_username[user.id] = user
     print "added time"
+
+
+def export(bot, update):
+    """Adds data entities proposed by user
+
+    :param bot:
+    :param update: telegranm.ext.Update
+    :return:
+    """
+    all_options = []
+    preferences = defaultdict(list)
+    if message_stack == []:
+        bot.sendMessage(update.message.chat_id, text='There are no entries to export.')
+    else:
+        for entry in message_stack:
+            preferences[entry.user].append(entry.list_of_times)
+            all_options.append(entry.list_of_times)
+    print preferences
+    print all_options
+    # call doodle functions
+
 
 def void(bot, update):
     """
@@ -233,8 +258,11 @@ def finalize_schedule(bot, update):
                 user_handle = str(user.id) + " (" + user.first_name + ")"
 
             schedule_text = "@" + user_handle
-            schedule_text = schedule_text + ' can you make it between {} and {}'.format(start.strftime(DATA_FORMAT),
-                                                                                        end.strftime(DATA_FORMAT), )
+            schedule_text = schedule_text + ' can you make it between {} {} and {} {}'.format(
+                start.strftime(HOUR_FORMAT),
+                start.strftime(DATA_FORMAT),
+                end.strftime(HOUR_FORMAT),
+                end.strftime(DATA_FORMAT))
 
             bot.sendMessage(update.message.chat_id, text=schedule_text,
                             reply_markup=ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True,
@@ -278,6 +306,7 @@ def main():
     dp.add_handler(CommandHandler('start_consensus', start_consensus))
     dp.add_handler(CommandHandler('end_consensus', end_consensus))
     dp.add_handler(CommandHandler('times', times))
+    dp.add_handler(CommandHandler('export', export))
 
     # log all errors
     dp.add_error_handler(error)
