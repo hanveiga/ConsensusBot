@@ -78,7 +78,7 @@ def end_consensus(bot, update):
 
     new_consensus = ms.get_suggested_meetings_topology_sort(message_stack, meeting_length)
 
-    if new_consensus == []:
+    if new_consensus == [] or state.value < States.LISTENING.value:
         print "Can't give meeting output yet"
         bot.sendMessage(update.message.chat_id, text="I can't schedule for you yet. Tell me when you are free")
         return
@@ -99,8 +99,13 @@ def end_consensus(bot, update):
 
         for user in users:
             global  users_dict_id_to_username
-            schedule_text = "@"+users_dict_id_to_username[user]
-            schedule_text = schedule_text + ' Can you make it between {} and {}'.format(start.strftime(DATA_FORMAT),
+            if users_dict_id_to_username[user].username is not []:
+                user_handle = users_dict_id_to_username[user].username
+            else:
+                user_handle = str(user) + " (" + users_dict_id_to_username[user].first_name + ")"
+
+            schedule_text = "@"+ user_handle
+            schedule_text = schedule_text + ' can you make it between {} and {}'.format(start.strftime(DATA_FORMAT),
                                                                                         end.strftime(DATA_FORMAT),)
             bot.sendMessage(update.message.chat_id, text= schedule_text,
                             reply_markup=ReplyKeyboardMarkup(reply_keyboard,resize_keyboard = True,
@@ -121,7 +126,7 @@ def times(bot, update):
     user = update.message.from_user
     global users_dict_id_to_username
     if user.id not in users_dict_id_to_username:
-        users_dict_id_to_username[user.id] = user.username
+        users_dict_id_to_username[user.id] = user
     print "added time"
 
 
