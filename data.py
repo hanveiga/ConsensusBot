@@ -1,6 +1,5 @@
 import re
 import parsing.MessageParser as mp
-import nltk
 
 class DataMessage:
 
