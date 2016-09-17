@@ -12,7 +12,6 @@ class MessageParser():
 
     def extract_datetime_range(self,message):
         resp = self.client.message(message)
-        resp = json.loads(str(resp).replace("u'","'").replace("'",'"'))
         isnegative  = False
         if "negative" in resp['entities']:
             isnegative = True
@@ -33,7 +32,6 @@ class MessageParser():
 
     def extract_intent(self,message):
         resp = self.client.message(message)
-        resp = json.loads(str(resp).replace("u'","'").replace("'",'"'))
         resp = resp['entities']
         if "start" in resp:
             return "start"
@@ -45,6 +43,6 @@ class MessageParser():
             return "None"
 
 #m = MessageParser()
-#print m.extract_datetime_range('i can do it on friday')
+#print m.extract_intent('i won\'t be able to come on Friday.')
 
 
