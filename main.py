@@ -36,7 +36,9 @@ message_stack = []
 listening = False
 state = States.STARTED
 intent_parser = mp()
-DATA_FORMAT = '%H:%M %Y-%m-%d'
+#DATA_FORMAT = '%H:%M %Y-%m-%d'
+HOUR_FORMAT = '%H:%M'
+DATA_FORMAT = '%d/%m'
 users_dict_id_to_username = {}
 
 # Define a few command handlers. These usually take the two arguments bot and
@@ -76,7 +78,9 @@ def end_consensus(bot, update):
         for interval in message.list_of_times:
             times_availability.append(interval)
 
-    if ms.get_suggested_meetings(times_availability) == []:
+    new_consensus = ms.get_suggested_meetings_topology_sort(message_stack, meeting_length)
+
+    if new_consensus == []:
         print "Can't give meeting output yet"
         bot.sendMessage(update.message.chat_id, text="I can't schedule for you yet. Tell me when you are free")
         return
@@ -91,7 +95,8 @@ def end_consensus(bot, update):
     users = new_consensus[0].users_to_ask
     if users == []:
         bot.sendMessage(update.message.chat_id, text="We have a consensus")
-        text = 'A date could be between {} and {}'.format(start.strftime(DATA_FORMAT), end.strftime(DATA_FORMAT))
+        string = 'A date could be between' #{} and {} on {}'
+        text = get_text(string,start,end)
         bot.sendMessage(update.message.chat_id, text=text)
 
     else:
@@ -100,8 +105,10 @@ def end_consensus(bot, update):
         for user in users:
             global  users_dict_id_to_username
             schedule_text = "@"+users_dict_id_to_username[user]
-            schedule_text = schedule_text + ' Can you make it between {} and {}'.format(start.strftime(DATA_FORMAT),
-                                                                                        end.strftime(DATA_FORMAT),)
+            #schedule_text = schedule_text + ' Can you make it between {} and {} on {}'.format(start.strftime(HOUR_FORMAT),
+            #                                                                            end.strftime(HOUR_FORMAT),
+            #                                                                                  start.strftime(DATA_FORMAT))
+            schedule_text = schedule_text + get_text(' Can you make it between',start,end)
             bot.sendMessage(update.message.chat_id, text= schedule_text,
                             reply_markup=ReplyKeyboardMarkup(reply_keyboard,resize_keyboard = True,
                                                              one_time_keyboard=True,selective=True))
@@ -185,6 +192,18 @@ def main():
     # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
 
+
+def get_text(string,start,end):
+    if start.day == end.day:
+        text = string+' {} and {} on {}'.format(start.strftime(HOUR_FORMAT),
+                                               end.strftime(HOUR_FORMAT),
+                                              start.strftime(DATA_FORMAT))
+    else:
+        text = string+' {} on {} and {} on {}'.format(start.strftime(HOUR_FORMAT),
+                                                start.strftime(DATA_FORMAT),
+                                               end.strftime(HOUR_FORMAT),
+                                                end.strftime(DATA_FORMAT))
+    return text
 
 if __name__ == '__main__':
     main()
