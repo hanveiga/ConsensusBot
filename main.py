@@ -20,7 +20,7 @@ import data
 import bots.meetingsuggestor as ms
 from parsing.MessageParser import MessageParser as mp
 import parsing.IntentFeedback as gf
-from parsing.States import States
+from parsing.States import *
 
 
 from settigns import TOKEN
@@ -33,13 +33,13 @@ logger = logging.getLogger(__name__)
 
 meeting_length = 2
 message_stack = []
-listening = False
-state = States.STARTED
 intent_parser = mp()
-
+state = States.STARTED
 HOUR_FORMAT = '%H:%M'
 DATA_FORMAT = '%d/%m'
 users_dict_id_to_username = {}
+users_to_query = []
+scheduling_policies = []
 
 # Define a few command handlers. These usually take the two arguments bot and
 # update. Error handlers also receive the raised TelegramError object in error.
@@ -52,8 +52,6 @@ def start_consensus(bot, update):
     """
     # TODO(scezar): right now requested format is /start_consensus int h
     global message_stack
-    global listening
-    listening = True
     message_stack = []
     operated_message = update.message.text
     new_meeting_len = ''
@@ -72,6 +70,12 @@ def end_consensus(bot, update):
     :param update: telegranm.ext.Update
     :return:
     """
+    global state
+    global users_to_query
+    global scheduling_policies
+
+    if state.value >= States.FINALIZING.value:
+        return
 
     times_availability = []
     for message in message_stack:
@@ -79,7 +83,6 @@ def end_consensus(bot, update):
             times_availability.append(interval)
 
     new_consensus = ms.get_suggested_meetings_topology_sort(message_stack, meeting_length)
-
     if new_consensus == [] or state.value < States.LISTENING.value:
         print "Can't give meeting output yet"
         bot.sendMessage(update.message.chat_id, text="I can't schedule for you yet. Tell me when you are free")
@@ -90,22 +93,29 @@ def end_consensus(bot, update):
     # a, b = meeting
     # start, end = a
     new_consensus = ms.get_suggested_meetings_topology_sort(message_stack, meeting_length)
+
+    scheduling_policies = new_consensus[:]
+
     start = new_consensus[0].date_from
     end = new_consensus[0].date_to
     users = new_consensus[0].users_to_ask
-    if users == []:
+
+    if not users:
         bot.sendMessage(update.message.chat_id, text="We have a consensus")
         string = 'A date could be between' #{} and {} on {}'
         text = get_text(string,start,end)
         bot.sendMessage(update.message.chat_id, text=text)
 
     else:
-        reply_keyboard = [['Yes', 'No']]
+        reply_keyboard = [['Yes', 'No', 'You guys go on!']]
+        state = States.FINALIZING
+
+        users_to_query = users[:]
 
         for user in users:
-            global  users_dict_id_to_username
+            global users_dict_id_to_username
 
-            if users_dict_id_to_username[user].username is not []:
+            if users_dict_id_to_username[user].username is not "":
                 user_handle = users_dict_id_to_username[user].username
             else:
                 user_handle = str(user) + " (" + users_dict_id_to_username[user].first_name + ")"
@@ -116,7 +126,7 @@ def end_consensus(bot, update):
 
             bot.sendMessage(update.message.chat_id, text= schedule_text,
                             reply_markup=ReplyKeyboardMarkup(reply_keyboard,resize_keyboard = True,
-                                                             one_time_keyboard=True,selective=True))
+                                                            one_time_keyboard=True,selective=True))
 
 
 def times(bot, update):
@@ -136,11 +146,10 @@ def times(bot, update):
         users_dict_id_to_username[user.id] = user
     print "added time"
 
-
 def void(bot, update):
     """
     :param bot:
-    :param update:
+:param update:
     :return: Nothing. This is to handle irrelevant conversations
     """
     print "Nothing"
@@ -152,6 +161,86 @@ process_callback = {
     "times" : times,
     "None" : void,
 }
+
+def finalize_schedule(bot, update):
+    global users_to_query, state, scheduling_policies
+    global users_dict_id_to_username
+
+    reply_keyboard = [['Yes', 'No', 'You guys go on!']]
+
+    if scheduling_policies:
+        policy = scheduling_policies[0]
+        start = policy.date_from
+        end = policy.date_to
+        user_ids = policy.users_to_ask
+
+        for user_id in user_ids:
+
+            user = users_dict_id_to_username[user_id]
+
+            if user.id == update.message.from_user.id and bot.id == update.message.reply_to_message.from_user.id:
+                if response_text[Responses.AGREE] == update.message.text:
+                    text = user.first_name + " can make it"
+                    bot.sendMessage(update.message.chat_id, text=text)
+
+                    users_to_query.remove(user.id)
+                elif response_text[Responses.DISAGREE] == update.message.text:
+                    text = user.first_name + " can't make it. Let's try another option"
+                    bot.sendMessage(update.message.chat_id, text=text)
+                    break
+                    # breaking condition
+                elif response_text[Responses.FORFEIT] == update.message.text:
+                    text = user.first_name + " won't be joining"
+                    bot.sendMessage(update.message.chat_id, text=text)
+
+                    users_to_query.remove(user.id)
+                else:
+                    print "dropped through without processing but captured that the user responded"
+                    continue
+
+        if not users_to_query:
+            text = "All participants can make it uploading to Doodle..."
+            bot.sendMessage(update.message.chat_id, text=text)
+            scheduling_policies = []
+            return
+
+        scheduling_policies.remove(policy)
+
+        if scheduling_policies:
+            policy = scheduling_policies[0]
+        else:
+            for user_id in users_to_query:
+                user = users_dict_id_to_username[user_id]
+                text = user.first_name + " can't make the plan"
+                bot.sendMessage(update.message.chat_id, text=text)
+            bot.sendMessage(update.message.chat_id, text="No plan exists")
+            return
+
+        start = policy.date_from
+        end = policy.date_to
+        user_ids = policy.users_to_ask
+
+        users_to_query = user_ids[:]
+
+
+        for user_id in user_ids:
+
+            user = users_dict_id_to_username[user_id]
+
+            if user.username is not "":
+                user_handle = user.username
+            else:
+                user_handle = str(user.id) + " (" + user.first_name + ")"
+
+            schedule_text = "@" + user_handle
+            schedule_text = schedule_text + ' can you make it between {} and {}'.format(start.strftime(DATA_FORMAT),
+                                                                                        end.strftime(DATA_FORMAT), )
+
+            bot.sendMessage(update.message.chat_id, text=schedule_text,
+                            reply_markup=ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True,
+                                                             one_time_keyboard=True, selective=True))
+
+
 
 def intent_extractor(bot, update):
     """
@@ -165,7 +254,11 @@ def intent_extractor(bot, update):
     if give_reply:
         bot.sendMessage(update.message.chat_id, text=feedback)
 
-    process_callback[intent](bot,update)
+    if state.value < States.FINALIZING.value:
+        process_callback[intent](bot,update)
+    else:
+        finalize_schedule(bot,update)
+
 
 def error(bot, update, error):
     logger.warn('Update {} caused error {}'.format(update, error))
