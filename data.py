@@ -17,15 +17,16 @@ class DataMessage:
             self.list_of_times = self.get_times()
 
     def parse_text(self, message_text):
-        sentences = re.findall("[A-Z].*?[\.!?]", message_text, re.MULTILINE | re.DOTALL)
+        #sentences = re.findall("[A-Z].*?[\.!?]", message_text, re.MULTILINE | re.DOTALL)
+        se_break = re.compile("""[.!?] \s+  """, re.VERBOSE)
+        sentences = se_break.split(message_text)
+        print sentences
         return sentences
 
     def get_times(self):
         m = mp.MessageParser()
         list_of_times = []
-        print self.parsed
         for string in self.parsed:
-            print m.extract_datetime_range(string)
             list_of_times.append(m.extract_datetime_range(string))
 
         return list_of_times
