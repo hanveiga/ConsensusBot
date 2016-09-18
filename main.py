@@ -22,6 +22,7 @@ from parsing.MessageParser import MessageParser as mp
 import parsing.IntentFeedback as gf
 from parsing.States import *
 from collections import defaultdict
+from bots.meetingsuggestor import ResultObject
 
 
 
@@ -42,6 +43,15 @@ DATA_FORMAT = '%d/%m'
 users_dict_id_to_username = {}
 users_to_query = []
 scheduling_policies = []
+
+def restart():
+    global message_stack, users_dict_id_to_username, users_to_query, scheduling_policies, state
+    message_stack = []
+    state = States.STARTED
+    users_dict_id_to_username = {}
+    users_to_query = []
+    scheduling_policies = []
+    print "Restarting bot..."
 
 # Define a few command handlers. These usually take the two arguments bot and
 # update. Error handlers also receive the raised TelegramError object in error.
@@ -101,15 +111,38 @@ def end_consensus(bot, update):
     start = new_consensus[0].date_from
     end = new_consensus[0].date_to
     users = new_consensus[0].users_to_ask
+    reply_keyboard = [['Yes', 'No', 'You guys go on!']]
 
     if not users:
-        bot.sendMessage(update.message.chat_id, text="We have a consensus")
-        string = 'A date could be between' #{} and {} on {}'
+
+        bot.sendMessage(update.message.chat_id, text="We have a consensus and the final schedule is..")
+        string = 'Between' #{} and {} on {}'
         text = get_text(string,start,end)
         bot.sendMessage(update.message.chat_id, text=text)
 
+        for user in users_dict_id_to_username.keys():
+            if users_dict_id_to_username[user].username is not "":
+                user_handle = users_dict_id_to_username[user].username
+            else:
+                user_handle = str(user) + " (" + users_dict_id_to_username[user].first_name + ")"
+            schedule_text = "@" + user_handle
+            schedule_text = schedule_text + ' can you make it then?'
+                # .format(
+                # start.strftime(HOUR_FORMAT),
+                # start.strftime(DATA_FORMAT),
+                # end.strftime(HOUR_FORMAT),
+                # end.strftime(DATA_FORMAT))
+            bot.sendMessage(update.message.chat_id, text= schedule_text,
+                            reply_markup=ReplyKeyboardMarkup(reply_keyboard,resize_keyboard = True,
+                                                            one_time_keyboard=False,selective=True))
+        scheduling_policies = []
+        final_schedule = ResultObject(0,start,end,users_dict_id_to_username.keys())
+        users_to_query = users_dict_id_to_username.keys()
+        scheduling_policies = [final_schedule]
+        state = States.FINALIZING
+
     else:
-        reply_keyboard = [['Yes', 'No', 'You guys go on!']]
+
         state = States.FINALIZING
 
         users_to_query = users[:]
@@ -193,6 +226,8 @@ def finalize_schedule(bot, update):
 
     reply_keyboard = [['Yes', 'No', 'You guys go on!']]
 
+    starting_policy_length = len(scheduling_policies)
+
     if scheduling_policies:
         policy = scheduling_policies[0]
         start = policy.date_from
@@ -212,6 +247,7 @@ def finalize_schedule(bot, update):
                 elif response_text[Responses.DISAGREE] == update.message.text:
                     text = user.first_name + " can't make it. Let's try another option"
                     bot.sendMessage(update.message.chat_id, text=text)
+                    scheduling_policies.remove(policy)
                     break
                     # breaking condition
                 elif response_text[Responses.FORFEIT] == update.message.text:
@@ -227,46 +263,48 @@ def finalize_schedule(bot, update):
             text = "All participants can make it uploading to Doodle..."
             bot.sendMessage(update.message.chat_id, text=text)
             scheduling_policies = []
+            restart()
             return
 
-        scheduling_policies.remove(policy)
-
-        if scheduling_policies:
-            policy = scheduling_policies[0]
-        else:
+        if not scheduling_policies:
             for user_id in users_to_query:
                 user = users_dict_id_to_username[user_id]
                 text = user.first_name + " can't make the plan"
                 bot.sendMessage(update.message.chat_id, text=text)
             bot.sendMessage(update.message.chat_id, text="No plan exists")
+            restart()
             return
 
-        start = policy.date_from
-        end = policy.date_to
-        user_ids = policy.users_to_ask
+        elif starting_policy_length == len(scheduling_policies):
+            return
+        else:
+            policy = scheduling_policies[0]
 
-        users_to_query = user_ids[:]
+            start = policy.date_from
+            end = policy.date_to
+            user_ids = policy.users_to_ask
 
+            users_to_query = user_ids[:]
 
-        for user_id in user_ids:
+            for user_id in user_ids:
 
-            user = users_dict_id_to_username[user_id]
+                user = users_dict_id_to_username[user_id]
 
-            if user.username is not "":
-                user_handle = user.username
-            else:
-                user_handle = str(user.id) + " (" + user.first_name + ")"
+                if user.username is not "":
+                    user_handle = user.username
+                else:
+                    user_handle = str(user.id) + " (" + user.first_name + ")"
 
-            schedule_text = "@" + user_handle
-            schedule_text = schedule_text + ' can you make it between {} {} and {} {}'.format(
-                start.strftime(HOUR_FORMAT),
-                start.strftime(DATA_FORMAT),
-                end.strftime(HOUR_FORMAT),
-                end.strftime(DATA_FORMAT))
+                schedule_text = "@" + user_handle
+                schedule_text = schedule_text + ' can you make it between {} {} and {} {}'.format(
+                    start.strftime(HOUR_FORMAT),
+                    start.strftime(DATA_FORMAT),
+                    end.strftime(HOUR_FORMAT),
+                    end.strftime(DATA_FORMAT))
 
-            bot.sendMessage(update.message.chat_id, text=schedule_text,
-                            reply_markup=ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True,
-                                                             one_time_keyboard=True, selective=True))
+                bot.sendMessage(update.message.chat_id, text=schedule_text,
+                                reply_markup=ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True,
+                                                                 one_time_keyboard=True, selective=True))
 
 
 
