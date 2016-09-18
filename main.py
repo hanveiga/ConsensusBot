@@ -23,7 +23,7 @@ import parsing.IntentFeedback as gf
 from parsing.States import *
 from collections import defaultdict
 from bots.meetingsuggestor import ResultObject
-
+import doodle.export_doodle as doodle
 
 
 from settigns import TOKEN
@@ -40,6 +40,7 @@ intent_parser = mp()
 state = States.STARTED
 HOUR_FORMAT = '%H:%M'
 DATA_FORMAT = '%d/%m'
+DATE_FORMAT = '%H:%M %d/%m'
 users_dict_id_to_username = {}
 users_to_query = []
 scheduling_policies = []
@@ -119,27 +120,28 @@ def end_consensus(bot, update):
         string = 'Between' #{} and {} on {}'
         text = get_text(string,start,end)
         bot.sendMessage(update.message.chat_id, text=text)
+        restart()
 
-        for user in users_dict_id_to_username.keys():
-            if users_dict_id_to_username[user].username is not "":
-                user_handle = users_dict_id_to_username[user].username
-            else:
-                user_handle = str(user) + " (" + users_dict_id_to_username[user].first_name + ")"
-            schedule_text = "@" + user_handle
-            schedule_text = schedule_text + ' can you make it then?'
-                # .format(
-                # start.strftime(HOUR_FORMAT),
-                # start.strftime(DATA_FORMAT),
-                # end.strftime(HOUR_FORMAT),
-                # end.strftime(DATA_FORMAT))
-            bot.sendMessage(update.message.chat_id, text= schedule_text,
-                            reply_markup=ReplyKeyboardMarkup(reply_keyboard,resize_keyboard = True,
-                                                            one_time_keyboard=False,selective=True))
-        scheduling_policies = []
-        final_schedule = ResultObject(0,start,end,users_dict_id_to_username.keys())
-        users_to_query = users_dict_id_to_username.keys()
-        scheduling_policies = [final_schedule]
-        state = States.FINALIZING
+        # for user in users_dict_id_to_username.keys():
+        #     if users_dict_id_to_username[user].username is not "":
+        #         user_handle = users_dict_id_to_username[user].username
+        #     else:
+        #         user_handle = str(user) + " (" + users_dict_id_to_username[user].first_name + ")"
+        #     schedule_text = "@" + user_handle
+        #     schedule_text = schedule_text + ' can you make it then?'
+        #         # .format(
+        #         # start.strftime(HOUR_FORMAT),
+        #         # start.strftime(DATA_FORMAT),
+        #         # end.strftime(HOUR_FORMAT),
+        #         # end.strftime(DATA_FORMAT))
+        #     bot.sendMessage(update.message.chat_id, text= schedule_text,
+        #                     reply_markup=ReplyKeyboardMarkup(reply_keyboard,resize_keyboard = True,
+        #                                                     one_time_keyboard=False,selective=True))
+        # scheduling_policies = []
+        # final_schedule = ResultObject(0,start,end,users_dict_id_to_username.keys())
+        # users_to_query = users_dict_id_to_username.keys()
+        # scheduling_policies = [final_schedule]
+        # state = States.FINALIZING
 
     else:
 
@@ -184,24 +186,41 @@ def times(bot, update):
     print "added time"
 
 
-def export(bot, update):
+def export(bot,update):
+
     """Adds data entities proposed by user
 
     :param bot:
     :param update: telegranm.ext.Update
     :return:
     """
-    all_options = []
+    all_users = []
+    for user in message_stack:
+        if user.user in all_users:
+            pass
+        else:
+            all_users.append(user.user)
+
+    all_options_text = []
     preferences = defaultdict(list)
+    full_preferences = defaultdict(list)
     if message_stack == []:
         bot.sendMessage(update.message.chat_id, text='There are no entries to export.')
     else:
-        for entry in message_stack:
-            preferences[entry.user].append(entry.list_of_times)
-            all_options.append(entry.list_of_times)
-    print preferences
-    print all_options
-    # call doodle functions
+        new_consensus = ms.get_suggested_meetings_topology_sort(message_stack, meeting_length)
+        for result in new_consensus:
+            print result.date_from
+            print result.date_to
+            print result.users_to_ask
+            all_options_text.append({'text':result.date_from.strftime(DATE_FORMAT)+'-'+result.date_to.strftime(DATE_FORMAT)})
+            for user in all_users:
+                if user in result.users_to_ask:
+                    full_preferences[user].append(0)
+                else:
+                    full_preferences[user].append(1)
+                # positive
+    doodle.generate_doodle(full_preferences,all_options_text)
+
 
 
 def void(bot, update):
