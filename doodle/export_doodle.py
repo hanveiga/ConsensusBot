@@ -20,12 +20,13 @@ def _create_poll(choices_names):
             'name': 'Pawel Kaminski',
             'email': 'pawelkaminski@mailinator.com'
         },
-        'type': 'DATE',
+        'type': 'TEXT',
         'options': choices_names,
     }
     print(sent_data)
     returned_request = requests.post('https://api.tamedia.cloud/doodle/v1/polls', json=sent_data, headers=headers)
     json_req = returned_request.json()
+    print json_req
     return json_req['id'], json_req['optionsHash']
 
 
