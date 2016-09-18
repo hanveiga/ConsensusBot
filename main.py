@@ -277,6 +277,7 @@ def finalize_schedule(bot, update):
                     print "dropped through without processing but captured that the user responded"
                     continue
 
+        # All awkward cases handled we have consensus
         if not users_to_query:
             text = get_text('All participants can make it for the time ', policy.date_from, policy.date_to) + '.'
             bot.sendMessage(update.message.chat_id, text=text)
@@ -284,6 +285,7 @@ def finalize_schedule(bot, update):
             restart()
             return
 
+        # Ran out of policies and some users still can't make it
         if not scheduling_policies:
             for user_id in users_to_query:
                 user = users_dict_id_to_username[user_id]
@@ -293,8 +295,10 @@ def finalize_schedule(bot, update):
             restart()
             return
 
+        # Continue querying other users of the current policy
         elif starting_policy_length == len(scheduling_policies):
             return
+        # Announce new policy
         else:
             policy = scheduling_policies[0]
 
