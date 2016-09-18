@@ -39,7 +39,7 @@ message_stack = []
 intent_parser = mp()
 state = States.STARTED
 HOUR_FORMAT = '%H:%M'
-DATA_FORMAT = '%d/%m'
+DATA_FORMAT = '%A, %d. %B'
 DATE_FORMAT = '%H:%M %d/%m'
 users_dict_id_to_username = {}
 users_to_query = []
@@ -122,8 +122,8 @@ def end_consensus(bot, update):
 
     if not users:
 
-        bot.sendMessage(update.message.chat_id, text="We have a consensus and the final schedule is..")
-        string = 'Between' #{} and {} on {}'
+        bot.sendMessage(update.message.chat_id, text="We have a consensus.")
+        string = 'The final schedule is between ' #{} and {} on {}'
         text = get_text(string,start,end)
         bot.sendMessage(update.message.chat_id, text=text)
         restart()
@@ -163,11 +163,8 @@ def end_consensus(bot, update):
             else:
                 user_handle = str(user) + " (" + users_dict_id_to_username[user].first_name + ")"
 
-            schedule_text = "@"+ user_handle
-            schedule_text = schedule_text + ' can you make it between {} {} and {} {}'.format(start.strftime(HOUR_FORMAT),
-                                                                                           start.strftime(DATA_FORMAT),
-                                                                                        end.strftime(HOUR_FORMAT),
-                                                                                        end.strftime(DATA_FORMAT))
+            schedule_text = "@" + user_handle
+            schedule_text = schedule_text + get_text(' can you make it ', start, end) + '?'
 
             bot.sendMessage(update.message.chat_id, text= schedule_text,
                             reply_markup=ReplyKeyboardMarkup(reply_keyboard,resize_keyboard = True,
@@ -288,7 +285,7 @@ def finalize_schedule(bot, update):
 
         # All awkward cases handled we have consensus
         if not users_to_query:
-            text = "All participants can make it!"
+            text = get_text('All participants can make it for the time ', policy.date_from, policy.date_to) + '.'
             bot.sendMessage(update.message.chat_id, text=text)
             scheduling_policies = []
             restart()
@@ -327,11 +324,12 @@ def finalize_schedule(bot, update):
                     user_handle = str(user.id) + " (" + user.first_name + ")"
 
                 schedule_text = "@" + user_handle
-                schedule_text = schedule_text + ' can you make it between {} {} and {} {}'.format(
-                    start.strftime(HOUR_FORMAT),
-                    start.strftime(DATA_FORMAT),
-                    end.strftime(HOUR_FORMAT),
-                    end.strftime(DATA_FORMAT))
+                schedule_text = schedule_text + get_text(' can you make it ',start,end)+'?'
+                #schedule_text = schedule_text + ' can you make it between {} {} and {} {}'.format(
+                #    start.strftime(HOUR_FORMAT),
+                #    start.strftime(DATA_FORMAT),
+                #    end.strftime(HOUR_FORMAT),
+                #    end.strftime(DATA_FORMAT))
 
                 bot.sendMessage(update.message.chat_id, text=schedule_text,
                                 reply_markup=ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True,
@@ -392,13 +390,11 @@ def main():
 
 def get_text(string,start,end):
     if start.day == end.day:
-        text = string+' {} and {} on {}'.format(start.strftime(HOUR_FORMAT),
+        text = string+' between {} and {} on {}'.format(start.strftime(HOUR_FORMAT),
                                                end.strftime(HOUR_FORMAT),
                                               start.strftime(DATA_FORMAT))
     else:
-        text = string+' {} on {} and {} on {}'.format(start.strftime(HOUR_FORMAT),
-                                                start.strftime(DATA_FORMAT),
-                                               end.strftime(HOUR_FORMAT),
+        text = string+' between {} and {}'.format( start.strftime(DATA_FORMAT),
                                                 end.strftime(DATA_FORMAT))
     return text
 

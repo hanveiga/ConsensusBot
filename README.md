@@ -52,6 +52,9 @@ install requirements
 pip install -r requirements.txt
 ```
 
+Register your bot using botFather:
+https://core.telegram.org/bots#6-botfather
+
 ## 3. Libraries
 Libraries requested by project:
 1. requests - used for communication with doodle API
