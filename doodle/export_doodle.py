@@ -47,6 +47,8 @@ def generate_doodle(user_preferences, choices_intervals):
     for user, preferences in user_preferences.items():
         _add_participants(preferences, user, poll_id, options_hash)
 
+    return 'http://doodle.com/poll/'+str(poll_id)
+
 #import datetime
 #generate_doodle({'Andrzej': [0,], 'Marysia': [1,]}, [{'start': datetime.datetime.now().isoformat(),
 #                                                     'end': datetime.datetime.now().isoformat()}, ])
