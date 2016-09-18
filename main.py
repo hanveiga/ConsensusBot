@@ -206,6 +206,7 @@ def export(bot,update):
     full_preferences = defaultdict(list)
     if message_stack == []:
         bot.sendMessage(update.message.chat_id, text='There are no entries to export.')
+        return
     else:
         new_consensus = ms.get_suggested_meetings_topology_sort(message_stack, meeting_length)
         for result in new_consensus:
@@ -215,11 +216,12 @@ def export(bot,update):
             all_options_text.append({'text':result.date_from.strftime(DATE_FORMAT)+'-'+result.date_to.strftime(DATE_FORMAT)})
             for user in all_users:
                 if user in result.users_to_ask:
-                    full_preferences[user].append(0)
+                    full_preferences[users_dict_id_to_username[user].first_name].append(0)
                 else:
-                    full_preferences[user].append(1)
+                    full_preferences[users_dict_id_to_username[user].first_name].append(1)
                 # positive
-    doodle.generate_doodle(full_preferences,all_options_text)
+    url = doodle.generate_doodle(full_preferences,all_options_text)
+    bot.sendMessage(update.message.chat_id, text='Doodle created, follow link: '+url)
 
 
 
