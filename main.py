@@ -90,7 +90,10 @@ def end_consensus(bot, update):
     if state.value >= States.FINALIZING.value:
         return
 
-    if state.value < States.LISTENING.value:
+    if state.value < States.LISTENING.value or not message_stack:
+        print "Can't give meeting output yet"
+        bot.sendMessage(update.message.chat_id, text="I can't schedule for you yet. Tell me when you are free")
+        state = States.LISTENING
         return
 
     times_availability = []
@@ -99,10 +102,10 @@ def end_consensus(bot, update):
             times_availability.append(interval)
 
     new_consensus = ms.get_suggested_meetings_topology_sort(message_stack, meeting_length)
-    if new_consensus == [] or state.value < States.LISTENING.value:
-        print "Can't give meeting output yet"
-        bot.sendMessage(update.message.chat_id, text="I can't schedule for you yet. Tell me when you are free")
+    if new_consensus == []:
+        bot.sendMessage(update.message.chat_id, text="I couldn't find a spot. Keep talking to me!")
         return
+
 
 
     # meeting = ms.get_suggested_meetings(times_availability)[0] # takes highest ranked option
