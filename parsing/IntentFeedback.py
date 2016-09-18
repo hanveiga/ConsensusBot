@@ -8,7 +8,7 @@ def start(state):
 
     state = States.LISTENING
 
-    return "Let's start a meeting schedule" , give_reply, state
+    return "I'm listening. When are you guys free?" , give_reply, state
 
 def end(state):
     return "Let's see when we can meet", False , state
