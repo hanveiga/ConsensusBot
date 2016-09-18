@@ -13,8 +13,8 @@ Basic Echobot example, repeats messages.
 Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
-from telegram import ReplyKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
+from telegram import ReplyKeyboardMarkup, InlineKeyboardMarkup
 import logging
 import data
 import bots.meetingsuggestor as ms
@@ -88,6 +88,9 @@ def end_consensus(bot, update):
     global scheduling_policies
 
     if state.value >= States.FINALIZING.value:
+        return
+
+    if state.value < States.LISTENING.value:
         return
 
     times_availability = []
@@ -370,6 +373,7 @@ def main():
     dp.add_handler(CommandHandler('end_consensus', end_consensus))
     dp.add_handler(CommandHandler('times', times))
     dp.add_handler(CommandHandler('export', export))
+
 
     # log all errors
     dp.add_error_handler(error)
