@@ -1,5 +1,4 @@
 # ConsensusBot
-ConsensusBot for HackZurich
 
 ## Table of content
 
